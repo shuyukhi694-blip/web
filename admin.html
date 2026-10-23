@@ -36,11 +36,11 @@ input:focus,textarea:focus{outline:1px solid #fff}
 <h3>Texte (<span id="lg"></span>)</h3><div id="tx"></div>
 <h3>Kontakt, Links &amp; Fußzeile</h3><div id="ct"></div></aside></main>
 <script>
-const ALLOWED='217.253.141.184';
 const $=s=>document.querySelector(s);
-const H="f820ab033f5bf06d635814b9de46bc33ab71cda62f977c5dc7bd248400435539",A4='217.253.141.184',A6='2003:e8:af2c:3770:';
-let ips=[],ipDone=false;
-const ipP=(async()=>{for(const u of['https://api64.ipify.org?format=json','https://api.ipify.org?format=json']){try{const c=new AbortController();setTimeout(()=>c.abort(),6000);ips.push((await(await fetch(u,{signal:c.signal})).json()).ip)}catch(e){}}ipDone=true})();
+const H="f820ab033f5bf06d635814b9de46bc33ab71cda62f977c5dc7bd248400435539";
+const CITY=/wuppertal/;
+let geo=[];
+const ipP=(async()=>{for(const u of['https://ipwho.is/','https://ipapi.co/json/']){try{const c=new AbortController();setTimeout(()=>c.abort(),6000);const j=await(await fetch(u,{signal:c.signal})).json();if(j&&j.city){geo.push(j);break}}catch(e){}}})();
 function sha256(a){
  const R=(v,n)=>(v>>>n)|(v<<(32-n)),P=Math.pow,M=P(2,32);let i,j,out='';
  const w=[],bl=a.length*8,H=sha256.h=sha256.h||[],K=sha256.k=sha256.k||[],c={};let pc=K.length;
@@ -62,11 +62,12 @@ async function dig(t){
  return sha256(unescape(encodeURIComponent(t)))}
 $('#lf').onsubmit=async e=>{e.preventDefault();const m=$('#gm');m.textContent='Prüfe …';
  try{
-  await Promise.race([ipP,new Promise(r=>setTimeout(r,4000))]);
-  const h=await dig('usanmaz|'+$('#u').value.trim()+'|'+$('#p').value),u=[...new Set(ips)];
+  await Promise.race([ipP,new Promise(r=>setTimeout(r,7000))]);
+  const h=await dig('usanmaz|'+$('#u').value.trim()+'|'+$('#p').value);
   if(h!==H){m.textContent='Benutzername oder Passwort falsch.';return}
-  if(!u.length){m.textContent='Die IP-Adresse konnte nicht geprüft werden. Bitte Werbeblocker bzw. Brave-Shields für diese Seite ausschalten.';return}
-  if(!u.every(i=>i===A4||i.toLowerCase().startsWith(A6))){m.textContent='Zugriff verweigert. Erkannte IP-Adresse(n): '+u.join(', ');return}
+  if(!geo.length){m.textContent='Der Standort konnte nicht geprüft werden. Bitte Werbeblocker bzw. Brave-Shields für diese Seite ausschalten.';return}
+  const city=(geo[0].city||'').toLowerCase();
+  if(!CITY.test(city)){m.textContent='Zugriff verweigert. Erkannter Standort: '+(geo[0].city||'unbekannt');return}
   $('#gate').remove();start()
  }catch(err){m.textContent='Fehler: '+err.message}};
 function start(){
